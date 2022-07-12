@@ -1,8 +1,4 @@
-ESX = nil
-
-TriggerEvent('esx:getSharedObject', function(obj)
-    ESX = obj
-end)
+ESX = exports['es_extended']:getSharedObject()
 
 -- Job Checker
 ESX.RegisterServerCallback("mx_shotspotter:getJob", function(source, cb)
@@ -19,7 +15,6 @@ end)
 -- Blip Sync to Officers
 RegisterNetEvent('mx_shotspotter:createBlip')
 AddEventHandler('mx_shotspotter:createBlip', function(coords)
-    print('testt')
     TriggerClientEvent('mx_shotspotter:createBlip', -1, coords)
 end)
 
