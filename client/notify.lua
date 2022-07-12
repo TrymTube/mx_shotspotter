@@ -1,11 +1,4 @@
-ESX = nil
-
-Citizen.CreateThread(function()
-    while ESX == nil do
-        TriggerEvent('esx:getSharedObject', function(obj) ESX = obj end)
-        Citizen.Wait(1)
-    end
-end)
+ESX = exports['es_extended']:getSharedObject()
 
 -- Notify Client Event
 RegisterNetEvent('mx_shotspotter:sendOfficerNotify')
