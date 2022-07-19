@@ -4,76 +4,92 @@ ESX = exports['es_extended']:getSharedObject()
 Citizen.CreateThread(function()
     while true do
         Wait(0)
+        if ESX.IsPlayerLoaded() then
 
-        local sleep = true
+            local sleep = true
 
-        local playerPed = PlayerPedId()
-        local pedShot = IsPedShooting(playerPed)
-        local pedArmed = IsPedArmed(playerPed, 4)
-        local weapon = GetSelectedPedWeapon(playerPed)
-        local currentWeapon = GetSelectedPedWeapon(playerPed)
-        local silencer = IsPedCurrentWeaponSilenced(playerPed)
-        local coords = GetEntityCoords(playerPed)
+            local playerPed = PlayerPedId()
+            local pedShot = IsPedShooting(playerPed)
+            local pedArmed = IsPedArmed(playerPed, 4)
+            local weapon = GetSelectedPedWeapon(playerPed)
+            local currentWeapon = GetSelectedPedWeapon(playerPed)
+            local silencer = IsPedCurrentWeaponSilenced(playerPed)
+            local coords = GetEntityCoords(playerPed)
 
-        if pedArmed ~= false then
-            sleep = false
-            if pedShot and not WeaponBlacklisted(weapon)  then
-                local pos = GetEntityCoords(playerPed)
-
-                local streetHash1, streetHash2 = GetStreetNameAtCoord(coords.x, coords.y, coords.z)
-                local streetName1, streetName2 = GetStreetNameFromHashKey(streetHash1), GetStreetNameFromHashKey(streetHash2)
-
-                if Config.EnableSilencerDetection and silencer then
-                    if Config.Debug then
-                        if streetHash2 == 0 then
-                            print('weapon with silencer shot at: ' ..pos .. ' near ' ..streetName1)
-                        elseif streetHash2 ~= 0 then
-                            print('weapon with silencer shot at: ' ..pos .. ' near ' ..streetName1.. ' and ' ..streetName2)
+            
+            for k, v in pairs(Config.WhitelistedJob) do
+                
+                if pedArmed ~= false then
+                    ESX.TriggerServerCallback('mx_shotspotter:getJob', function(job)
+                        currentJob = job.name
+            
+                        if not currentJob == v then
+                            sleep = false
+                            if pedShot and not WeaponBlacklisted(weapon)  then
+                                local pos = GetEntityCoords(playerPed)
+                
+                                local streetHash1, streetHash2 = GetStreetNameAtCoord(coords.x, coords.y, coords.z)
+                                local streetName1, streetName2 = GetStreetNameFromHashKey(streetHash1), GetStreetNameFromHashKey(streetHash2)
+                
+                                if Config.EnableSilencerDetection and silencer then
+                                    if Config.Debug then
+                                        if streetHash2 == 0 then
+                                            print('weapon with silencer shot at: ' ..pos .. ' near ' ..streetName1)
+                                        elseif streetHash2 ~= 0 then
+                                            print('weapon with silencer shot at: ' ..pos .. ' near ' ..streetName1.. ' and ' ..streetName2)
+                                        end
+                                    end
+                
+                                    Wait(Config.NotifyWait * 1000)
+                
+                                    if Config.EnableBlips then
+                                        TriggerServerEvent('mx_shotspotter:createBlip', coords)
+                                    end
+                
+                                    if streetHash2 == 0 then
+                                        TriggerServerEvent('mx_shotspotter:sendOfficerNotify', 'ALERT', '213', 'Somebody shot a Gun with Silencer at ' ..streetName1, 'CHAR_CALL911', 7500, 'warning')
+                                    elseif streetHash2 ~= 0 then
+                                        TriggerServerEvent('mx_shotspotter:sendOfficerNotify', 'ALERT', '213', 'Somebody shot a Gun with Silencer at ' ..streetName1 .. ' and ' ..streetName2, 'CHAR_CALL911', 7500, 'warning')
+                                    end
+                
+                                    if Config.UsePhoneDispatch then
+                                        TriggerEvent('mx_shotspotter:phoneDispatch', coords, currentWeapon)
+                                    end
+                                elseif not silencer then
+                                    if Config.Debug then
+                                        if streetHash2 == 0 then
+                                            print('weapon shot at: ' ..pos .. ' near ' ..streetName1)
+                                        elseif streetHash2 ~= 0 then
+                                            print('weapon shot at: ' ..pos .. ' near ' ..streetName1.. ' and ' ..streetName2)
+                                        end
+                                    end
+                                    
+                                    Wait(Config.NotifyWait * 1000)
+                
+                                    if Config.EnableBlips then
+                                        TriggerServerEvent('mx_shotspotter:createBlip', coords)
+                                    end
+                
+                                    if streetHash2 == 0 then
+                                        TriggerServerEvent('mx_shotspotter:sendOfficerNotify', 'ALERT', '213', 'Somebody shot a Gun at ' ..streetName1, 'CHAR_CALL911', 7500, 'warning')
+                                    elseif streetHash2 ~= 0 then
+                                        TriggerServerEvent('mx_shotspotter:sendOfficerNotify', 'ALERT', '213', 'Somebody shot a Gun at ' ..streetName1 .. ' and ' ..streetName2, 'CHAR_CALL911', 7500, 'warning')
+                                    end
+                
+                                    if Config.UsePhoneDispatch then
+                                        TriggerEvent('mx_shotspotter:phoneDispatch', coords, currentWeapon)
+                                    end
+                                end
+                                Wait(Config.Cooldown * 1000)
+                            end
                         end
-                    end
-
-                    if Config.EnableBlips then
-                        TriggerServerEvent('mx_shotspotter:createBlip', coords)
-                    end
-
-                    if streetHash2 == 0 then
-                        TriggerServerEvent('mx_shotspotter:sendOfficerNotify', 'ALERT', '213', 'Somebody shot a Gun with Silencer at ' ..streetName1, 'CHAR_CALL911', 7500, 'warning')
-                    elseif streetHash2 ~= 0 then
-                        TriggerServerEvent('mx_shotspotter:sendOfficerNotify', 'ALERT', '213', 'Somebody shot a Gun with Silencer at ' ..streetName1 .. ' and ' ..streetName2, 'CHAR_CALL911', 7500, 'warning')
-                    end
-
-                    if Config.UsePhoneDispatch then
-                        TriggerEvent('mx_shotspotter:phoneDispatch', coords, currentWeapon)
-                    end
-                elseif not silencer then
-                    if Config.Debug then
-                        if streetHash2 == 0 then
-                            print('weapon shot at: ' ..pos .. ' near ' ..streetName1)
-                        elseif streetHash2 ~= 0 then
-                            print('weapon shot at: ' ..pos .. ' near ' ..streetName1.. ' and ' ..streetName2)
-                        end
-                    end
-
-                    if Config.EnableBlips then
-                        TriggerServerEvent('mx_shotspotter:createBlip', coords)
-                    end
-
-                    if streetHash2 == 0 then
-                        TriggerServerEvent('mx_shotspotter:sendOfficerNotify', 'ALERT', '213', 'Somebody shot a Gun with Silencer at ' ..streetName1, 'CHAR_CALL911', 7500, 'warning')
-                    elseif streetHash2 ~= 0 then
-                        TriggerServerEvent('mx_shotspotter:sendOfficerNotify', 'ALERT', '213', 'Somebody shot a Gun with Silencer at ' ..streetName1 .. ' and ' ..streetName2, 'CHAR_CALL911', 7500, 'warning')
-                    end
-
-                    if Config.UsePhoneDispatch then
-                        TriggerEvent('mx_shotspotter:phoneDispatch', coords, currentWeapon)
-                    end
+                    end)
                 end
-                Wait(Config.Cooldown * 1000)
             end
-        end
 
-        if sleep then
-            Wait(500)
+            if sleep then
+                Wait(500)
+            end
         end
     end
 end)
@@ -91,7 +107,7 @@ AddEventHandler('mx_shotspotter:createBlip', function(coords)
                 blip = AddBlipForCoord(coords)
 
                 SetBlipSprite(blip, 161)
-                SetBlipScale(blip, 1.0)
+                SetBlipScale(blip, 1.5)
                 SetBlipColour(blip, 1)
                 SetBlipAsShortRange(blip, true)
             
